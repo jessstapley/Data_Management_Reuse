@@ -1,0 +1,61 @@
+---
+title: "Genome size of sequenced genomes available on NCBI"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+This is a document to create plots of data on genome size from NCBI (as of 20.06.19). Here I plot genome size against the year it was released for all the genomes available on NCBI. I also plot the distribution of log genome size using a kernel denisty function. After loading data "NCBI_eukaryotes.txt" with read.table, run the following commands to recreate these plots.
+
+```{r, include=FALSE}
+dat = read.table("../data/NCBI_eukaryotes.txt", header = TRUE)
+```
+
+## Sequenced genome size over time for different taxonomic groups
+
+Genomes on NCBI have been getting bigger. The Axolotl genome is the largest. 
+
+```{r}
+library(scales)
+dat$l.Gsize = log(dat$G.Size.Mb)
+par(bty="l")
+plot(G.Size.Mb~year, typ="n", dat, ylab="Genome Size (Mb)", xlab="Year", ylim=c(0,37000))
+points(G.Size.Mb~year, pch=19, subset(dat, dat$group1=="Plants"), col=alpha("green3", 0.75))
+points(G.Size.Mb~I(year+0.25), pch=19, subset(dat, dat$group1=="Animals"), col=alpha("blue3", 0.75))
+points(G.Size.Mb~I(year+0.5), pch=19, subset(dat, dat$group1=="Fungi"), col=alpha("orange", 0.75))
+points(G.Size.Mb~I(year+0.75), pch=19, subset(dat, dat$group1=="Protists"), col=alpha("red", 0.75))
+
+```
+
+## Make the same plot with ggplot
+The R package ggplot can make beautiful plots, but it uses a different code syntax/gramma and this can can make it hard to use - I still need to google the code regularly, I don't find it very intuitive. 
+There are many tutorials online and I recommend you look at these (e.g <https://www.statmethods.net/advgraphs/ggplot2.html>, <http://r-statistics.co/ggplot2-Tutorial-With-R.html>).
+I this graphmany points occur in the same year and thus are overlapping on the graph. Herr we use 'jitter()' to add a small amount of noise to the data so you can see them more clearly. You could also use jitter()in the previous plot.
+
+```{r}
+library(ggplot2)
+dat$l.Gsize = log(dat$G.Size.Mb)
+ggplot(dat, aes(year, G.Size.Mb, colour = group1)) + 
+  geom_jitter(width=0.5) 
+
+```
+
+## Distribution of sequenced genome sizes for different taxonomic groups
+
+```{r}
+plants <-  subset(dat, dat$group1=="Plants")
+animals <-  subset(dat, dat$group1=="Animals")
+fungi <- subset(dat, dat$group1=="Fungi")
+protists <- subset(dat, dat$group1=="Protists")
+
+par(bty="l")
+plot(density(dat$l.Gsize), ylab="", col="white", main="Log genome size", ylim=c(0,1))
+lines(density(plants$l.Gsize), col="dark green")
+lines(density(animals$l.Gsize), col="blue")
+lines(density(fungi$l.Gsize), col="orange")
+lines(density(protists$l.Gsize),col="red")
+
+
+```
+
